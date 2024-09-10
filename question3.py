@@ -1,80 +1,75 @@
+from cvxopt import matrix, solvers
 import numpy as np
 import pandas as pd
-import cvxopt
 
+# Load the training and test data
+train_data = pd.read_csv('train.csv')
+test_data = pd.read_csv('test.csv')
+
+# Separate the labels and features
+X_train = train_data.iloc[:, 1:].values  # Features from column 1 onwards
+y_train = train_data.iloc[:, 0].values   # Labels in the first column
+X_test = test_data.iloc[:, 1:].values    # Features from column 1 onwards
+y_test = test_data.iloc[:, 0].values     # Labels in the first column
+
+# Convert labels from (0, 1) to (-1, 1) for SVM compatibility
+y_train = np.where(y_train == 0, -1, y_train)
+y_test = np.where(y_test == 0, -1, y_test)
+
+# Define the SVM training function
 def svm_train_dual(data_train, label_train, regularisation_para_C):
-    # Data dimensions
-    N, d = data_train.shape
-    
-    # Convert labels from {0, 1} to {-1, 1}
-    y = np.where(label_train == 0, -1, 1).reshape(-1, 1)
+    m, n = data_train.shape
 
-    # Compute the Gram matrix (Kernel matrix), in this case, linear kernel K(x_i, x_j) = x_i.T * x_j
+    # Compute the Kernel matrix
     K = np.dot(data_train, data_train.T)
-    
-    # Prepare matrices for cvxopt
-    P = cvxopt.matrix(np.outer(y, y) * K)  # Quadratic term: y_i y_j K(x_i, x_j)
-    q = cvxopt.matrix(-np.ones((N, 1)))    # Linear term: -1 for all i
-    G_std = cvxopt.matrix(np.vstack((-np.eye(N), np.eye(N))))  # Constraints for 0 <= alpha_i <= C
-    h_std = cvxopt.matrix(np.hstack((np.zeros(N), np.ones(N) * regularisation_para_C)))  # Constraints vector
-    A = cvxopt.matrix(y.T.astype(np.double))  # Equality constraint: sum(alpha_i * y_i) = 0
-    b = cvxopt.matrix(0.0)
 
-    # Solve the QP problem using cvxopt
-    solution = cvxopt.solvers.qp(P, q, G_std, h_std, A, b)
-    alphas = np.array(solution['x']).flatten()
+    # Ensure all matrices are of type 'd' for double precision
+    P = matrix(np.outer(label_train, label_train) * K, tc='d')
+    q = matrix(-np.ones(m), tc='d')
+    G = matrix(np.vstack((-np.eye(m), np.eye(m))), tc='d')
+    h = matrix(np.hstack((np.zeros(m), np.ones(m) * regularisation_para_C)), tc='d')
+    A = matrix(label_train, (1, m), tc='d')
+    b = matrix(0.0)
 
-    # Print the sum of alpha values
-    sum_of_alphas = np.sum(alphas)
-    print(f"Sum of Alphas: {sum_of_alphas}")
+    # Solve the quadratic programming problem
+    solution = solvers.qp(P, q, G, h, A, b)
+    alpha_value = np.ravel(solution['x'])
 
-    # Get weight vector w and bias term b
-    w = np.sum(alphas[:, None] * y * data_train, axis=0)
-    
-    # Support vectors have non-zero alphas
-    sv_indices = np.where(alphas > 1e-5)[0]
-    b = np.mean([y[i] - np.dot(w, data_train[i]) for i in sv_indices])
-    
-    return (w, b)
+    # Support vectors have non-zero Lagrange multipliers (alpha > 1e-5)
+    support_vectors_idx = np.where(alpha_value > 1e-5)[0]
+    support_alphas = alpha_value[support_vectors_idx]
+    support_vectors = data_train[support_vectors_idx]
+    support_labels = label_train[support_vectors_idx]
 
-def svm_predict_dual(data_test, label_test, svm_model):
-    w, b = svm_model
-    # Predict: sign(w.T * X + b)
-    predictions = np.sign(np.dot(data_test, w) + b)
-    # Convert {-1, 1} back to {0, 1}
-    predictions = np.where(predictions == -1, 0, 1)
-    
-    # Calculate accuracy
-    accuracy = np.mean(predictions == label_test)
-    return accuracy
+    # Compute the weight vector (w)
+    w = np.sum(support_alphas[:, None] * support_labels[:, None] * support_vectors, axis=0)
 
-if __name__ == '__main__':
-    # Load data without any assumptions about headers
-    train_data = pd.read_csv('train.csv', header=None)
-    test_data = pd.read_csv('test.csv', header=None)
+    # Compute the intercept (bias term b)
+    b = np.mean(
+        [support_labels[i] - np.dot(w, support_vectors[i])
+         for i in range(len(support_alphas))]
+    )
 
-    # Separate features and labels
-    X_train = train_data.iloc[:4000, 1:].values  # Features from 2nd column onwards
-    y_train = train_data.iloc[:4000, 0].values   # Labels from 1st column
-    X_val = train_data.iloc[4000:, 1:].values
-    y_val = train_data.iloc[4000:, 0].values
-    X_test = test_data.iloc[:, 1:].values
-    y_test = test_data.iloc[:, 0].values
+    # Return the model, containing the alphas, support vectors, labels, bias, and weight vector
+    return {
+        'alpha': alpha_value,
+        'support_vectors': support_vectors,
+        'support_labels': support_labels,
+        'b': b,
+        'w': w,
+        'support_alphas': support_alphas
+    }
 
-    # Train the model
-    C = 100
-    svm_model_dual = svm_train_dual(X_train, y_train, C)
+# Train the SVM
+C = 100
+svm_model = svm_train_dual(X_train, y_train, C)
 
-    # Validate and test the model
-    val_accuracy_dual = svm_predict_dual(X_val, y_val, svm_model_dual)
-    test_accuracy_dual = svm_predict_dual(X_test, y_test, svm_model_dual)
+# Extract the values
+w = svm_model['w']
+b = svm_model['b']
+alpha_sum = np.sum(svm_model['alpha'])
 
-    print(f"Validation Accuracy (Dual): {val_accuracy_dual * 100:.2f}%")
-    print(f"Test Accuracy (Dual): {test_accuracy_dual * 100:.2f}%")
-
-    # Sum of weights for a quick check
-    w_sum_dual = np.sum(svm_model_dual[0])
-    print(f"Sum of w (Dual): {w_sum_dual}")
-    
-    # Print the bias term
-    print(f"Bias (b, Dual): {svm_model_dual[1]}")
+# Output the results
+print(f"Weight vector (w): {w}")
+print(f"Bias term (b): {b}")
+print(f"Sum of alphas: {alpha_sum}")
