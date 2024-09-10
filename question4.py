@@ -37,7 +37,7 @@ def compute_primal_solution(alpha, data_train, label_train, regularisation_para_
         b_star_values.append(b_star_value)
     
     # Average the bias terms from all support vectors
-    b_star = np.mean(b_star_values) if b_star_values else 0
+    b_star = np.median(b_star_values) if b_star_values else 0
     
     return w_star, b_star
 
