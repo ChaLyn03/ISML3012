@@ -44,5 +44,9 @@ alpha = svm_train_dual(data_train, label_train, regularisation_para_C)
 # Save the computed alpha to a file for future use
 np.save('alpha.npy', alpha)
 
-# Print the sum of alpha as requested
-print("Sum of alpha:", np.sum(alpha))
+# Save the sum of alpha to a text file
+alpha_sum = np.sum(alpha)
+with open('question3.txt', 'w') as f:
+    f.write(f"Sum of alpha: {alpha_sum}\n")
+
+print(f"Sum of alpha saved to question3.txt: {alpha_sum}")

@@ -63,13 +63,11 @@ if __name__ == '__main__':
 
     # Sum of weights for a quick check
     w_sum = np.sum(svm_model[0])
-    print(f"Sum of w: {w_sum}")
+    b = svm_model[1]
     
-    # Print the bias term
-    print(f"Bias (b): {svm_model[1]}")
+    # Save the sum of w and b to a text file
+    with open('question2.txt', 'w') as f:
+        f.write(f"Sum of w: {w_sum}\n")
+        f.write(f"Bias (b): {b}\n")
 
-    # Extract w and b from primal
-    w_primal, b_primal = svm_model
-
-    # Print values for comparison
-    print(f"Primal SVM: Sum of w = {np.sum(w_primal)}, b = {b_primal}")
+    print(f"Sum of w and b saved to question2.txt")

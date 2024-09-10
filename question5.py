@@ -2,6 +2,7 @@ import cvxpy as cvx
 import numpy as np
 import pandas as pd
 from cvxopt import matrix, solvers
+
 def svm_train_dual(data_train, label_train, regularisation_para_C):
     samples, features = data_train.shape
     label_train = label_train * 2 - 1  # Convert 0/1 to -1/1
@@ -16,13 +17,16 @@ def svm_train_dual(data_train, label_train, regularisation_para_C):
     solution = solvers.qp(P,Q,G,H,A,B)
     alpha = np.ravel(solution['x'])
     return {'alpha': alpha}
+
 def compute_primal_solution(alpha, data_train, label_train, regularisation_para_C, tolerance=1e-5):
     support_vector_indices = np.where((alpha > tolerance) & (alpha < regularisation_para_C))[0]
     label_train = label_train * 2 - 1 
     
     w_star = np.sum((alpha * label_train).reshape(-1, 1) * data_train, axis=0)
     
-    print(len(support_vector_indices))
+    print(f"Number of support vectors: {len(support_vector_indices)}")
+    print("Support vector indices:", support_vector_indices)
+    
     b_star_values = []
     for idx in support_vector_indices:
         x_s = data_train[idx]
@@ -30,10 +34,12 @@ def compute_primal_solution(alpha, data_train, label_train, regularisation_para_
         b_star_value = y_s - np.dot(w_star, x_s)
         b_star_values.append(b_star_value)
     
-    # Average the bias terms from all support vectors
-    b_star = np.median(b_star_values) if b_star_values else 0
+    # Write support vectors to file
+    with open('question5.txt', 'w') as f:
+        f.write(f"Number of support vectors: {len(support_vector_indices)}\n")
+        f.write(f"Support vector indices: {support_vector_indices.tolist()}\n")
     
-    return w_star, b_star
+    return w_star, None  # b_star removed
 
 train_data = pd.read_csv('train.csv', header=None)
 test_data = pd.read_csv('test.csv', header=None)
@@ -47,17 +53,4 @@ data_test = test_data.iloc[:, 1:].values
 optimal = svm_train_dual(data_train, label_train, regularisation_para_C)
 np.save('alpha.npy', optimal['alpha'])
 alpha = np.load('alpha.npy')
-w_star, b_star = compute_primal_solution(alpha, data_train, label_train, regularisation_para_C)
-
-# Calculate the sum of w_star (the weight vector)
-w_star_sum = np.sum(w_star)
-
-# Print the sum of w* and b* to the terminal
-print("Sum of w*:", w_star_sum)
-print("b*:", b_star)
-
-# Save the sum of w* and b* to a text file
-with open('question4.txt', 'w') as f:
-    f.write(f"Sum of w*: {w_star_sum}\n")
-    f.write(f"b*: {b_star}\n")
-
+w_star, _ = compute_primal_solution(alpha, data_train, label_train, regularisation_para_C)
