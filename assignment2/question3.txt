@@ -1,0 +1,14 @@
+Sum of alpha: 7.281637057117684
+Number of non-zero alphas (Support Vectors): 392
+First 5 alpha values: [2.49999998e-02 1.76599916e-10 1.27338214e-10 1.76758740e-10
+ 2.34799685e-10]
+Regularization parameter (C): 100
+Support Vector Indices (first 5): [ 0 16 28 29 41]
+Number of Violating Alphas (Margin Violators): 392
+Sum of Slack Variables (derived from alpha): 7.2816289058726635
+Gram Matrix Sample (5x5):
+[[239.9546  -9.2648  -9.9393 -46.9712  25.0618]
+ [ -9.2648 280.2659 -45.0966  79.1494  27.1356]
+ [ -9.9393 -45.0966 259.6921 -29.5942 -50.9048]
+ [-46.9712  79.1494 -29.5942 297.2164  45.5081]
+ [ 25.0618  27.1356 -50.9048  45.5081 270.317 ]]

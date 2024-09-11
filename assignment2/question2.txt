@@ -1,0 +1,9 @@
+Validation Accuracy: 96.96%
+Test Accuracy: 96.80%
+Sum of w: -0.14513522739640028
+Bias (b): 1.7798092086718922
+Regularization parameter (C): 100
+Slack variables (xi): [2.15280965e+00 2.03631263e-08 2.03798834e-08 2.03555780e-08
+ 2.03394480e-08] (first 5 shown)
+Total number of slack variables: 4000
+Full Model Weights: [-0.02622559 -0.11417209  0.04186253 -0.05229907  0.07552307] (first 5 shown)

@@ -1,0 +1,8 @@
+Sum of w*: -0.1451352273951927
+b*: 1.7798092093688218
+Number of support vectors: 392
+Support Vector Indices (first 5): [ 0 16 28 29 41]
+First 5 weights of w*: [-0.02622559 -0.11417209  0.04186253 -0.05229907  0.07552307]
+First 5 alpha values: [2.49999998e-02 1.76599916e-10 1.27338214e-10 1.76758740e-10
+ 2.34799685e-10]
+Regularization parameter (C): 100

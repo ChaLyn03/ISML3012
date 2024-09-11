@@ -1,0 +1,6 @@
+Optimal C: 4
+Validation Accuracy: 96.35%
+Test Accuracy: 96.93%
+Sum of Model Coefficients: 0.01841335137515998
+Bias (Intercept): 1.0283074193860124
+First 5 Coefficients: [ 0.00062454 -0.01072562  0.03267166 -0.0184045   0.03379624]
